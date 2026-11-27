@@ -1,0 +1,605 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>Fuzzy Needle · Admin</title>
+<meta name="theme-color" content="#F3E6EB">
+<meta name="color-scheme" content="light">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Caveat:wght@600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  /* ---------- Design tokens: pink grunge, light (blush, never pure white) (shared with index.html) ---------- */
+  :root{
+    --bg:#F3E6EB; --surface:#FBF3F6; --surface-2:#F1E2E8;
+    --line:#E6D0D8; --line-strong:#CFAFBB;
+    --ink:#2B1821; --muted:#6B5260; --faint:#8F7583;
+    --accent:#D42366; --accent-press:#A3164C; --accent-ink:#FFF3F7; --accent-soft:rgba(212,35,102,.09);
+    --rose:#AD1F57; --error:#B8213F;
+    --shadow:0 1px 0 rgba(120,40,70,.04),0 24px 50px -30px rgba(120,40,70,.28);
+    --amber:#8F5300; --amber-soft:rgba(214,140,0,.13);
+    --ok:#1E7345; --ok-soft:rgba(30,115,69,.11);
+
+    --font-display:Poppins,Inter,system-ui,sans-serif;
+    --font-body:Inter,system-ui,sans-serif;
+    --font-script:Caveat,cursive;
+
+    --s-1:4px; --s-2:8px; --s-3:12px; --s-4:16px; --s-5:24px; --s-6:32px; --s-7:48px;
+    --r-card:20px; --r-control:12px; --pad-seg:3px;
+    --ease:cubic-bezier(.2,.8,.2,1);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{min-height:100%}
+  body{background:var(--bg);color:var(--ink);font-family:var(--font-body);line-height:1.5;-webkit-font-smoothing:antialiased;font-size:15px}
+  body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.07;mix-blend-mode:multiply;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+  button,input{font:inherit;color:inherit}
+  [hidden]{display:none!important}
+  :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  h1,h2,h3{font-family:var(--font-display);font-weight:700;letter-spacing:-.02em;line-height:1.15;text-wrap:balance}
+  p{text-wrap:pretty}
+  .num{font-variant-numeric:tabular-nums}
+  .icon{width:18px;height:18px;flex:none;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  .logo{display:block;height:36px;width:auto}
+
+  .btn{appearance:none;border:0;cursor:pointer;font-weight:700;border-radius:var(--r-control);padding:11px 18px;background:var(--accent);color:var(--accent-ink);
+    box-shadow:0 3px 0 var(--accent-press);transition:transform .1s,box-shadow .1s,filter .15s,background .15s;display:inline-flex;align-items:center;justify-content:center;gap:var(--s-2);white-space:nowrap}
+  .btn:hover{filter:brightness(1.07)}
+  .btn:active{transform:translateY(2px);box-shadow:0 1px 0 var(--accent-press)}
+  .btn:disabled{cursor:default;filter:none}
+  .btn.ghost{background:var(--surface-2);color:var(--ink);box-shadow:none;border:1px solid var(--line-strong)}
+  .btn.ghost:hover{border-color:var(--muted)}
+  .btn.ghost:active{transform:none}
+  .btn.danger{background:none;color:var(--error);box-shadow:none;border:1px solid var(--line)}
+  .btn.danger:hover{border-color:var(--error)}
+  .btn.small{padding:8px 14px;font-size:14px}
+  .link{background:none;border:0;cursor:pointer;color:var(--muted);font-weight:600;font-size:13px;text-decoration:underline;text-underline-offset:3px}
+  .link:hover{color:var(--ink)}
+  .input{width:100%;border:1px solid var(--line-strong);background:var(--surface-2);border-radius:var(--r-control);padding:11px 14px;font-size:15px;transition:border-color .15s}
+  .input:focus{outline:none;border-color:var(--accent)}
+  .input::placeholder{color:var(--faint)}
+  .spinner{width:16px;height:16px;border-radius:50%;border:2.5px solid currentColor;border-right-color:transparent;animation:spin .7s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  /* ---------- sign-in & notices ---------- */
+  .center-screen{position:relative;z-index:1;min-height:100dvh;display:grid;place-items:center;padding:var(--s-5) var(--s-4)}
+  .panel{width:100%;max-width:380px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow);border-radius:var(--r-card);padding:var(--s-6) var(--s-5) var(--s-5)}
+  .panel .logo{height:52px;margin:0 auto var(--s-4)}
+  .panel h1{font-size:26px;text-align:center}
+  .panel p.sub{color:var(--muted);text-align:center;margin:var(--s-2) 0 var(--s-5)}
+  .panel label{display:block;font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin:var(--s-4) 0 var(--s-2)}
+  .panel .btn{width:100%;margin-top:var(--s-5);padding:14px}
+  .err{color:var(--error);font-weight:600;font-size:14px;margin-top:var(--s-3);min-height:21px}
+  .panel code{background:var(--accent-soft);color:var(--rose);padding:1px 6px;border-radius:6px;font-size:13px}
+  .panel ol{margin:var(--s-3) 0 0 20px} .panel ol li{margin:var(--s-2) 0}
+
+  /* ---------- shell ---------- */
+  .app{position:relative;z-index:1;max-width:1280px;margin:0 auto;padding:0 var(--s-5) var(--s-7)}
+  .top{display:flex;align-items:center;gap:var(--s-4);padding:var(--s-4) 0 var(--s-5)}
+  .top h1{font-size:22px;margin-right:auto}
+  .who{font-size:13px;color:var(--muted);text-align:right;line-height:1.35}
+  .live{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--muted)}
+  .live i{width:8px;height:8px;border-radius:50%;background:var(--line-strong);transition:background .3s}
+  .live.on i{background:var(--ok);box-shadow:0 0 0 3px var(--ok-soft)}
+
+  /* stat cards double as filters */
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:var(--s-3);margin-bottom:var(--s-4)}
+  .stat{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-card);padding:var(--s-4);text-align:left;cursor:pointer;transition:border-color .15s,background .15s}
+  .stat:hover{border-color:var(--line-strong)}
+  .stat.active{border-color:var(--accent);background:var(--accent-soft)}
+  .stat b{display:block;font:700 30px var(--font-display);line-height:1.1;font-variant-numeric:tabular-nums}
+  .stat span{font-size:13px;color:var(--muted);font-weight:600}
+  .stat.attn b{color:var(--accent)}
+
+  .toolbar{display:flex;gap:var(--s-3);align-items:center;margin-bottom:var(--s-4)}
+  .search{flex:1;position:relative}
+  .search .icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none}
+  .search .input{padding-left:42px}
+
+  .split{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,460px);gap:var(--s-4);align-items:start}
+
+  /* ---------- list ---------- */
+  .list{background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow);border-radius:var(--r-card);overflow:hidden}
+  .row{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr) 84px;gap:var(--s-3);align-items:center;padding:14px var(--s-4);
+    border:0;border-bottom:1px solid var(--line);cursor:pointer;width:100%;background:none;text-align:left;transition:background .15s}
+  .row:last-of-type{border-bottom:0}
+  .row:hover{background:var(--surface-2)}
+  .row.sel{background:var(--accent-soft);box-shadow:inset 3px 0 0 var(--accent)}
+  .row.fresh{animation:fresh 2.4s var(--ease)}
+  @keyframes fresh{0%{background:rgba(212,35,102,.22)}100%{background:transparent}}
+  .nm{font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:flex;align-items:center;gap:var(--s-2)}
+  .nm .dot{width:7px;height:7px;border-radius:50%;background:var(--accent);flex:none}
+  .meta{font-size:13px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-variant-numeric:tabular-nums}
+  .when{font-size:13px;color:var(--muted);text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+  .flags{display:flex;gap:6px;flex-wrap:wrap}
+  .flags:not(:empty){margin-top:6px}
+  .tag{display:inline-flex;align-items:center;font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;padding:2px 8px;border-radius:99px;font-variant-numeric:tabular-nums}
+  .tag.red{background:var(--accent-soft);color:var(--rose)}
+  .tag.amber{background:var(--amber-soft);color:var(--amber)}
+  .tag.green{background:var(--ok-soft);color:var(--ok)}
+  .empty{padding:var(--s-7) var(--s-5);text-align:center;color:var(--muted)}
+  .empty h3{color:var(--ink);font-size:20px;margin-bottom:var(--s-1)}
+  .more{padding:var(--s-3);text-align:center;font-size:13px;color:var(--muted);border-top:1px solid var(--line)}
+
+  /* skeleton */
+  .sk{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr) 84px;gap:var(--s-3);padding:18px var(--s-4);border-bottom:1px solid var(--line)}
+  .sk i{display:block;height:12px;border-radius:6px;background:linear-gradient(90deg,var(--surface-2) 0%,var(--line) 50%,var(--surface-2) 100%);background-size:200% 100%;animation:shimmer 1.2s linear infinite}
+  .sk i:first-child{width:70%}.sk i:nth-child(2){width:80%}.sk i:last-child{width:60%;justify-self:end}
+  @keyframes shimmer{from{background-position:200% 0}to{background-position:-200% 0}}
+
+  /* ---------- detail ---------- */
+  .detail{background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow);border-radius:var(--r-card);padding:var(--s-5);position:sticky;top:var(--s-4);max-height:calc(100dvh - 32px);overflow:auto}
+  .placeholder{color:var(--muted);text-align:center;padding:var(--s-7) var(--s-3)}
+  .d-head{display:flex;align-items:flex-start;gap:var(--s-3)}
+  .d-head h2{font-size:28px;word-break:break-word}
+  .d-sub{color:var(--muted);font-size:14px;margin-top:2px;font-variant-numeric:tabular-nums}
+  .close{display:none;background:var(--surface-2);border:1px solid var(--line-strong);width:38px;height:38px;border-radius:50%;cursor:pointer;place-items:center;flex:none;margin-left:auto}
+  .facts{display:grid;grid-template-columns:auto 1fr;gap:var(--s-2) var(--s-4);margin:var(--s-5) 0;font-size:14px}
+  .facts dt{color:var(--muted);font-weight:600}
+  .facts dd{word-break:break-word;font-variant-numeric:tabular-nums}
+  .facts a{color:var(--rose);font-weight:600;text-decoration:none}
+  .facts a:hover{text-decoration:underline}
+  .note{border-left:3px solid var(--accent);padding:2px 0 2px var(--s-4);margin:var(--s-4) 0;font-size:14px}
+  .note.amber{border-color:var(--amber)}
+  .note h4{font-size:12px;text-transform:uppercase;letter-spacing:.08em;margin-bottom:2px;color:var(--rose)}
+  .note.amber h4{color:var(--amber)}
+  .note p{white-space:pre-wrap;word-break:break-word}
+  .section-h{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:var(--s-5) 0 var(--s-2)}
+  .stmts{list-style:none;border-top:1px solid var(--line)}
+  .stmts li{display:grid;grid-template-columns:20px 1fr;gap:var(--s-2);font-size:13.5px;line-height:1.5;padding:var(--s-2) 0;border-bottom:1px solid var(--line);color:var(--muted)}
+  .stmts li .icon{width:16px;height:16px;margin-top:2px;color:var(--ok);stroke-width:2.6}
+  .stmts li.no{color:var(--ink)}
+  .stmts li.no .icon{color:var(--accent)}
+  .stmts li small{display:block;font-weight:700;color:var(--accent);font-size:11px;text-transform:uppercase;letter-spacing:.06em}
+  .sig{font:600 40px var(--font-script);border-bottom:1px solid var(--line-strong);padding:2px;margin-top:var(--s-1);word-break:break-word}
+  .sig-draw{display:block;width:100%;max-width:360px;height:auto;max-height:140px;color:var(--ink);margin-top:var(--s-1);border-bottom:1px solid var(--line-strong);padding-bottom:var(--s-2)}
+  .sig-meta{font-size:12px;color:var(--muted);margin-top:var(--s-1);font-variant-numeric:tabular-nums}
+  .sig-meta b{color:var(--amber)}
+  .d-actions{display:flex;gap:var(--s-2);flex-wrap:wrap;margin-top:var(--s-5);padding-top:var(--s-4);border-top:1px solid var(--line)}
+  .d-actions .danger{margin-left:auto}
+  .btn.reviewed{background:var(--ok-soft);color:var(--ok);box-shadow:none;border:1px solid transparent}
+  .btn.reviewed .icon path{stroke-dasharray:24;stroke-dashoffset:24;animation:draw .3s var(--ease) forwards}
+  @keyframes draw{to{stroke-dashoffset:0}}
+  .print-head{display:none}
+
+  .toast{position:fixed;left:50%;bottom:var(--s-5);transform:translateX(-50%) translateY(16px);background:var(--ink);color:var(--bg);padding:12px 18px;border-radius:var(--r-control);
+    font-weight:600;font-size:14px;opacity:0;transition:opacity .2s,transform .25s var(--ease);pointer-events:none;z-index:50;max-width:calc(100% - 32px)}
+  .toast.show{opacity:1;transform:translateX(-50%)}
+
+  @media (max-width:900px){
+    .split{grid-template-columns:1fr}
+    .detail{position:fixed;inset:0;border-radius:0;border:0;max-height:none;z-index:40;padding:var(--s-4) var(--s-4) var(--s-6)}
+    .detail.idle{display:none}
+    .close{display:grid}
+    body.sheet-open{overflow:hidden}
+  }
+  @media (max-width:640px){
+    .app{padding:0 var(--s-4) var(--s-6)}
+    .stats{grid-template-columns:repeat(2,1fr)}
+    .row,.sk{grid-template-columns:minmax(0,1fr) 76px}
+    .meta-col,.sk i:nth-child(2){display:none}
+    .who{display:none}
+  }
+
+  @media print{
+    :root{--shadow:none;--bg:#fff;--surface:#fff;--surface-2:#fff;--ink:#111;--muted:#555;--line:#ddd;--line-strong:#999;--accent:#C2185B;--rose:#C2185B;--amber:#92400e;--ok:#166534}
+    @page{margin:16mm}
+    body{font-size:12px}
+    body::before,.top,.stats,.toolbar,.list,.d-actions,.close,.toast{display:none!important}
+    .app{padding:0;max-width:none}
+    .split{display:block}
+    .detail{position:static;border:0;padding:0;max-height:none;overflow:visible;display:block!important}
+    .print-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--s-4);padding-bottom:var(--s-3);border-bottom:2px solid var(--line)}
+    .print-head span{font-size:11px;color:var(--muted)}
+    .print-head .logo{filter:none}
+    .stmts li{break-inside:avoid}
+  }
+  @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.btn.reviewed .icon path{stroke-dashoffset:0}}
+</style>
+</head>
+<body>
+
+<!-- Not configured -->
+<div class="center-screen" id="v-setup" hidden>
+  <div class="panel">
+    <img class="logo" src="logo-transparent.png" alt="Fuzzy Needle">
+    <h1>Connect Supabase</h1>
+    <p class="sub">The admin page needs your Supabase project.</p>
+    <ol>
+      <li>Run <code>supabase/schema.sql</code> in the Supabase SQL Editor.</li>
+      <li>Fill in <code>SUPABASE_URL</code> and <code>SUPABASE_ANON_KEY</code> in <code>config.js</code>.</li>
+      <li>Create an admin user and add them to <code>admins</code> (steps are at the top of the SQL file).</li>
+    </ol>
+  </div>
+</div>
+
+<!-- Sign in -->
+<div class="center-screen" id="v-login" hidden>
+  <form class="panel" id="login-form" autocomplete="on">
+    <img class="logo" src="logo-transparent.png" alt="Fuzzy Needle">
+    <h1>Studio admin</h1>
+    <p class="sub">Sign in to view client waivers.</p>
+    <label for="li-email">Email</label>
+    <input class="input" id="li-email" type="email" autocomplete="username" required>
+    <label for="li-pass">Password</label>
+    <input class="input" id="li-pass" type="password" autocomplete="current-password" required>
+    <button class="btn" type="submit" id="li-btn">Sign in</button>
+    <p class="err" id="li-err" role="alert"></p>
+  </form>
+</div>
+
+<!-- Signed in but not an admin -->
+<div class="center-screen" id="v-denied" hidden>
+  <div class="panel" style="text-align:center">
+    <img class="logo" src="logo-transparent.png" alt="Fuzzy Needle">
+    <h1>No access</h1>
+    <p class="sub"><span id="denied-email"></span> isn’t on the studio admin list. Ask the owner to add you to the <code>admins</code> table.</p>
+    <button class="btn ghost" data-signout style="width:100%">Sign out</button>
+  </div>
+</div>
+
+<!-- Dashboard -->
+<div class="app" id="v-app" hidden>
+  <header class="top">
+    <img class="logo" src="logo-transparent.png" alt="Fuzzy Needle">
+    <h1>Waivers</h1>
+    <span class="live" id="live" title="New waivers appear automatically"><i></i><span>Live</span></span>
+    <div class="who"><div id="who-email"></div><button class="link" data-signout>Sign out</button></div>
+  </header>
+
+  <section class="stats" id="stats" aria-label="Filter waivers">
+    <button class="stat" data-quick="today"><b id="s-today">–</b><span>Signed today</span></button>
+    <button class="stat" data-quick="7d"><b id="s-week">–</b><span>Last 7 days</span></button>
+    <button class="stat attn" data-quick="attn"><b id="s-attn">–</b><span>Need a look</span></button>
+    <button class="stat" data-quick="all"><b id="s-total">–</b><span>All waivers</span></button>
+  </section>
+
+  <div class="toolbar">
+    <label class="search">
+      <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+      <input class="input" id="q" type="search" placeholder="Search name, phone, email or IG" aria-label="Search waivers">
+    </label>
+    <button class="btn ghost" id="export">
+      <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>Export CSV
+    </button>
+  </div>
+
+  <div class="split">
+    <div class="list" id="list"></div>
+    <aside class="detail idle" id="detail"><div class="placeholder">Select a waiver to see the details.</div></aside>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="config.js"></script>
+<script src="waiver-pdf.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script>
+(() => {
+  const CFG = window.FUZZY_CONFIG || {};
+  const $ = id => document.getElementById(id);
+  const views = ['v-setup', 'v-login', 'v-denied', 'v-app'];
+  const show = id => views.forEach(v => $(v).hidden = v !== id);
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+  if (!CFG.SUPABASE_URL || !CFG.SUPABASE_ANON_KEY || !window.supabase) { show('v-setup'); return; }
+  const sb = window.supabase.createClient(CFG.SUPABASE_URL, CFG.SUPABASE_ANON_KEY);
+
+  const I = {
+    check:'<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
+    x:'<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>',
+    download:'<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>',
+    print:'<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 9V3h10v6M7 17H5a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-2"/><path d="M7 14h10v7H7z"/></svg>',
+    trash:'<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>',
+  };
+  const spinner = '<span class="spinner" aria-hidden="true"></span>';
+
+  // ---------- state ----------
+  let rows = [];               // all waivers, newest first
+  let selId = null;
+  let filter = 'all';          // today | 7d | attn | all
+  let query = '';
+  let me = null, channel = null;
+  const fresh = new Set();     // ids that just arrived live, to flash once
+  const SHOW_MAX = 300;
+
+  // ---------- helpers ----------
+  const fmtDate = d => new Date(d).toLocaleDateString('en-PH', { month:'short', day:'numeric', year:'numeric' });
+  const fmtTime = d => new Date(d).toLocaleTimeString('en-PH', { hour:'numeric', minute:'2-digit' });
+  const fmtDob = s => { const [y,m,d] = s.split('-').map(Number); return new Date(y, m-1, d).toLocaleDateString('en-PH', { month:'long', day:'numeric', year:'numeric' }); };
+  function ageAt(dob, at) {
+    const [y,m,d] = dob.split('-').map(Number), t = new Date(at);
+    let a = t.getFullYear() - y;
+    if (t.getMonth()+1 < m || (t.getMonth()+1 === m && t.getDate() < d)) a--;
+    return a;
+  }
+  function relWhen(d) {
+    const t = new Date(d), now = new Date();
+    const day = x => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
+    const diff = Math.round((day(now) - day(t)) / 864e5);
+    if (diff === 0) return fmtTime(t);
+    if (diff === 1) return 'Yesterday';
+    if (diff < 7) return t.toLocaleDateString('en-PH', { weekday:'short' });
+    return t.toLocaleDateString('en-PH', { month:'short', day:'numeric' });
+  }
+  const startOf = r => {
+    const n = new Date(), today = new Date(n.getFullYear(), n.getMonth(), n.getDate());
+    if (r === 'today') return today;
+    if (r === '7d') return new Date(today - 6 * 864e5);
+    return null;
+  };
+  function info(w) {
+    const skipped = (w.agreements || []).filter(a => !a.agreed);
+    const age = ageAt(w.dob, w.created_at);
+    const minor = age < 18;
+    const concerns = !!(w.concerns && w.concerns.trim());
+    return { skipped, age, minor, concerns, attn: !w.reviewed_at && (minor || concerns || skipped.length > 0) };
+  }
+  function flagTags(w, i) {
+    let h = '';
+    if (i.minor) h += `<span class="tag red">Under 18</span>`;
+    if (i.skipped.length) h += `<span class="tag red">${i.skipped.length} skipped</span>`;
+    if (i.concerns) h += `<span class="tag amber">Health note</span>`;
+    if (w.reviewed_at) h += `<span class="tag green">Reviewed</span>`;
+    return h;
+  }
+  let toastT;
+  function toast(msg) { const t = $('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 3200); }
+  // Rebuild a drawn signature as SVG from its numbers only (never trust stored markup).
+  function sigSvg(sig) {
+    if (!sig || !Array.isArray(sig.strokes)) return '';
+    const strokes = sig.strokes.filter(Array.isArray)
+      .map(s => s.filter(p => Array.isArray(p)).map(p => [Number(p[0]), Number(p[1])]).filter(p => isFinite(p[0]) && isFinite(p[1])))
+      .filter(s => s.length);
+    if (!strokes.length) return '';
+    const xs = strokes.flat().map(p => p[0]), ys = strokes.flat().map(p => p[1]), pad = 6;
+    const minX = Math.min(...xs) - pad, minY = Math.min(...ys) - pad;
+    const w = Math.max(Math.max(...xs) - minX + pad, 40), h = Math.max(Math.max(...ys) - minY + pad, 20);
+    const f = n => n.toFixed(1);
+    const d = strokes.map(s => {
+      if (s.length === 1) return `M${f(s[0][0])} ${f(s[0][1])}h.1`;
+      let p = `M${f(s[0][0])} ${f(s[0][1])}`;
+      for (let k = 1; k < s.length - 1; k++)
+        p += `Q${f(s[k][0])} ${f(s[k][1])} ${f((s[k][0] + s[k+1][0]) / 2)} ${f((s[k][1] + s[k+1][1]) / 2)}`;
+      const l = s[s.length - 1];
+      return p + `L${f(l[0])} ${f(l[1])}`;
+    }).join('');
+    return `<svg class="sig-draw" viewBox="${f(minX)} ${f(minY)} ${f(w)} ${f(h)}" role="img" aria-label="Drawn signature">
+      <path d="${d}" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+  }
+  const skeleton = n => Array.from({ length:n }, () => '<div class="sk" aria-hidden="true"><i></i><i></i><i></i></div>').join('');
+
+  // ---------- auth ----------
+  $('login-form').addEventListener('submit', async e => {
+    e.preventDefault();
+    const b = $('li-btn'); b.disabled = true; b.innerHTML = `${spinner}Signing in`; $('li-err').textContent = '';
+    const { error } = await sb.auth.signInWithPassword({ email: $('li-email').value.trim(), password: $('li-pass').value });
+    b.disabled = false; b.textContent = 'Sign in';
+    if (error) $('li-err').textContent = error.message === 'Invalid login credentials' ? 'Wrong email or password.' : error.message;
+  });
+  document.addEventListener('click', e => { if (e.target.closest('[data-signout]')) sb.auth.signOut(); });
+
+  let booted;
+  sb.auth.onAuthStateChange((_evt, session) => {
+    const uid = session?.user?.id || null;
+    if (uid === booted) return;                 // ignore token refreshes
+    booted = uid;
+    setTimeout(() => onSession(session), 0);    // don't await Supabase calls inside the callback
+  });
+
+  async function onSession(session) {
+    if (channel) { sb.removeChannel(channel); channel = null; }
+    rows = []; selId = null;
+    if (!session) { show('v-login'); $('li-pass').value = ''; return; }
+    me = session.user;
+    const { data, error } = await sb.from('admins').select('user_id').eq('user_id', me.id).maybeSingle();
+    if (error || !data) { $('denied-email').textContent = me.email; show('v-denied'); return; }
+    $('who-email').textContent = me.email;
+    show('v-app');
+    await load();
+    subscribe();
+  }
+
+  // ---------- data ----------
+  async function load() {
+    $('list').innerHTML = skeleton(6);
+    const all = [];
+    for (let from = 0; ; from += 1000) {
+      const { data, error } = await sb.from('waivers').select('*').order('created_at', { ascending:false }).range(from, from + 999);
+      if (error) { $('list').innerHTML = `<div class="empty"><h3>Couldn’t load waivers</h3>${esc(error.message)}</div>`; return; }
+      all.push(...data);
+      if (data.length < 1000) break;
+    }
+    rows = all;
+    renderAll();
+  }
+
+  function subscribe() {
+    channel = sb.channel('waivers-admin')
+      .on('postgres_changes', { event:'*', schema:'public', table:'waivers' }, p => {
+        if (p.eventType === 'INSERT') {
+          if (rows.some(r => r.id === p.new.id)) return;
+          rows.unshift(p.new); fresh.add(p.new.id);
+          toast(`New waiver from ${p.new.full_name}`);
+        } else if (p.eventType === 'UPDATE') {
+          rows = rows.map(r => r.id === p.new.id ? p.new : r);
+        } else if (p.eventType === 'DELETE') {
+          rows = rows.filter(r => r.id !== p.old.id);
+          if (selId === p.old.id) selId = null;
+        }
+        renderAll();
+      })
+      .subscribe(status => $('live').classList.toggle('on', status === 'SUBSCRIBED'));
+  }
+
+  // ---------- render ----------
+  function filtered() {
+    const from = startOf(filter);
+    const q = query.toLowerCase().replace(/^@/, '');
+    const qDigits = q.replace(/\D/g, '');
+    return rows.filter(w => {
+      if (from && new Date(w.created_at) < from) return false;
+      if (filter === 'attn' && !info(w).attn) return false;
+      if (!q) return true;
+      const hay = [w.full_name, w.email, w.instagram, w.signature].join(' ').toLowerCase();
+      return hay.includes(q) || (qDigits.length >= 3 && (w.phone || '').replace(/\D/g, '').includes(qDigits));
+    });
+  }
+
+  function renderStats() {
+    const t = startOf('today'), w = startOf('7d');
+    $('s-today').textContent = rows.filter(r => new Date(r.created_at) >= t).length;
+    $('s-week').textContent = rows.filter(r => new Date(r.created_at) >= w).length;
+    $('s-attn').textContent = rows.filter(r => info(r).attn).length;
+    $('s-total').textContent = rows.length;
+    document.querySelectorAll('.stat').forEach(s => {
+      s.classList.toggle('active', s.dataset.quick === filter);
+      s.setAttribute('aria-pressed', s.dataset.quick === filter);
+    });
+  }
+
+  function renderList() {
+    const list = filtered();
+    if (!rows.length) { $('list').innerHTML = `<div class="empty"><h3>No waivers yet</h3>New ones show up here as soon as a client signs.</div>`; return; }
+    if (!list.length) {
+      $('list').innerHTML = filter === 'attn' && !query
+        ? `<div class="empty"><h3>Nothing to check</h3>Every flagged waiver has been reviewed.</div>`
+        : `<div class="empty"><h3>No matches</h3>Try a different search or filter.</div>`;
+      return;
+    }
+    $('list').innerHTML = list.slice(0, SHOW_MAX).map(w => {
+      const i = info(w);
+      const contact = w.contact_method === 'Email' ? w.email : (w.instagram ? '@' + w.instagram.replace(/^@/, '') : '');
+      return `<button class="row ${w.id === selId ? 'sel' : ''} ${fresh.has(w.id) ? 'fresh' : ''}" data-id="${esc(w.id)}">
+        <div><div class="nm">${i.attn ? '<i class="dot" title="Needs a look"></i>' : ''}${esc(w.full_name)}</div>
+          <div class="flags">${flagTags(w, i)}</div></div>
+        <div class="meta-col"><div class="meta">${esc(w.phone)}</div><div class="meta">${esc(contact)}</div></div>
+        <div class="when">${esc(relWhen(w.created_at))}</div>
+      </button>`;
+    }).join('') + (list.length > SHOW_MAX ? `<div class="more">Showing ${SHOW_MAX} of ${list.length}. Search to find older waivers.</div>` : '');
+    fresh.clear();
+  }
+
+  function renderDetail() {
+    const d = $('detail'), w = rows.find(r => r.id === selId);
+    d.classList.toggle('idle', !w);
+    document.body.classList.toggle('sheet-open', !!w && matchMedia('(max-width:900px)').matches);
+    if (!w) { d.innerHTML = '<div class="placeholder">Select a waiver to see the details.</div>'; return; }
+    const i = info(w);
+    const ig = w.instagram ? w.instagram.replace(/^@/, '') : '';
+    const groups = {};
+    (w.agreements || []).forEach(a => (groups[a.tag] = groups[a.tag] || []).push(a));
+    const sigMismatch = w.signature.trim().toLowerCase() !== w.full_name.trim().toLowerCase();
+    const drawn = sigSvg(w.signature_strokes);
+    d.innerHTML = `
+      <div class="print-head"><img class="logo" src="logo-transparent.png" alt="Fuzzy Needle"><span>Tattoo waiver · ${esc(w.id)}</span></div>
+      <div class="d-head">
+        <div><h2>${esc(w.full_name)}</h2>
+          <div class="d-sub">Signed ${esc(fmtDate(w.created_at))}, ${esc(fmtTime(w.created_at))}</div></div>
+        <button class="close" data-close aria-label="Close">${I.x}</button>
+      </div>
+      <div class="flags">${flagTags(w, i)}</div>
+      <dl class="facts">
+        <dt>Born</dt><dd>${esc(fmtDob(w.dob))} · ${i.age} yrs</dd>
+        <dt>Phone</dt><dd><a href="tel:${esc(w.phone.replace(/[^\d+]/g, ''))}">${esc(w.phone)}</a></dd>
+        ${w.email ? `<dt>Email</dt><dd><a href="mailto:${esc(w.email)}">${esc(w.email)}</a></dd>` : ''}
+        ${ig ? `<dt>Instagram</dt><dd><a href="https://www.instagram.com/${esc(encodeURIComponent(ig))}/" target="_blank" rel="noopener noreferrer">@${esc(ig)}</a></dd>` : ''}
+        <dt>Prefers</dt><dd>${esc(w.contact_method)}</dd>
+      </dl>
+      ${i.minor ? `<div class="note"><h4>Under 18 at signing</h4><p>Check for parental or guardian consent before the session.</p></div>` : ''}
+      ${i.concerns ? `<div class="note amber"><h4>Allergies or health concerns</h4><p>${esc(w.concerns)}</p></div>` : ''}
+      ${i.skipped.length ? `<div class="note"><h4>Skipped ${i.skipped.length} statement${i.skipped.length > 1 ? 's' : ''}</h4><p>Talk these through before starting. They’re marked below.</p></div>` : ''}
+      ${Object.entries(groups).map(([tag, list]) => `
+        <div class="section-h">${esc(tag)}</div>
+        <ul class="stmts">${list.map(a => `<li class="${a.agreed ? '' : 'no'}">${a.agreed ? I.check : I.x}<span>${a.agreed ? '' : '<small>Skipped</small>'}${esc(a.text)}</span></li>`).join('')}</ul>`).join('')}
+      <div class="section-h">Signature</div>
+      ${drawn
+        ? `${drawn}<div class="sig-meta">Drawn by ${esc(w.signature)}</div>`
+        : `<div class="sig">${esc(w.signature)}</div>
+           <div class="sig-meta">Typed by the client${sigMismatch ? ' · <b>doesn’t match the name given</b>' : ''}</div>`}
+      <div class="d-actions">
+        ${w.reviewed_at
+          ? `<button class="btn small reviewed" data-review title="Click to undo">${I.check}Reviewed ${esc(relWhen(w.reviewed_at))}</button>`
+          : `<button class="btn small" data-review>Mark reviewed</button>`}
+        <button class="btn ghost small" data-pdf>${I.download}PDF</button>
+        <button class="btn ghost small" data-print>${I.print}Print</button>
+        <button class="btn danger small" data-delete>${I.trash}Delete</button>
+      </div>`;
+  }
+
+  function renderAll() { renderStats(); renderList(); renderDetail(); }
+
+  // ---------- interactions ----------
+  $('list').addEventListener('click', e => {
+    const r = e.target.closest('.row'); if (!r) return;
+    selId = r.dataset.id; renderList(); renderDetail();
+    $('detail').scrollTop = 0;
+  });
+  $('q').addEventListener('input', e => { query = e.target.value.trim(); renderList(); });
+  $('stats').addEventListener('click', e => {
+    const s = e.target.closest('.stat'); if (!s) return;
+    filter = s.dataset.quick; renderStats(); renderList();
+  });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && selId) { selId = null; renderList(); renderDetail(); } });
+
+  $('detail').addEventListener('click', async e => {
+    const w = rows.find(r => r.id === selId); if (!w) return;
+    if (e.target.closest('[data-close]')) { selId = null; renderList(); renderDetail(); return; }
+    if (e.target.closest('[data-print]')) { window.print(); return; }
+    const pb = e.target.closest('[data-pdf]');
+    if (pb) {
+      if (pb.disabled) return;
+      pb.disabled = true; pb.innerHTML = `${spinner}Preparing`;
+      try { await FuzzyPDF.download(w, 'logo-transparent.png'); toast('PDF downloaded'); }
+      catch (err) { console.error(err); toast(err.message || 'Couldn’t make the PDF'); }
+      pb.disabled = false; pb.innerHTML = `${I.download}PDF`;
+      return;
+    }
+    const rb = e.target.closest('[data-review]');
+    if (rb) {
+      rb.disabled = true; rb.innerHTML = `${spinner}Saving`;
+      const patch = w.reviewed_at ? { reviewed_at:null, reviewed_by:null } : { reviewed_at:new Date().toISOString(), reviewed_by:me.id };
+      const { data, error } = await sb.from('waivers').update(patch).eq('id', w.id).select().single();
+      if (error) { toast('Couldn’t update: ' + error.message); renderDetail(); return; }
+      rows = rows.map(r => r.id === w.id ? data : r); renderAll();
+      return;
+    }
+    const db = e.target.closest('[data-delete]');
+    if (db) {
+      if (!confirm(`Delete ${w.full_name}’s waiver? This can’t be undone.`)) return;
+      db.disabled = true; db.innerHTML = `${spinner}Deleting`;
+      const { error } = await sb.from('waivers').delete().eq('id', w.id);
+      if (error) { toast('Couldn’t delete: ' + error.message); renderDetail(); return; }
+      rows = rows.filter(r => r.id !== w.id); selId = null; renderAll();
+      toast('Waiver deleted');
+    }
+  });
+
+  // ---------- CSV ----------
+  $('export').addEventListener('click', () => {
+    const list = filtered();
+    if (!list.length) return toast('Nothing to export');
+    const cell = v => {
+      let s = String(v ?? '');
+      if (/^[=+\-@\t\r]/.test(s) && !/^\+?[\d\s()-]+$/.test(s)) s = "'" + s; // stop spreadsheet formulas
+      return /[",\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+    };
+    const head = ['Signed at','Full name','Date of birth','Age at signing','Phone','Contact via','Email','Instagram','Health concerns','Skipped statements','Signature','Reviewed at','ID'];
+    const lines = list.map(w => { const i = info(w); return [
+      new Date(w.created_at).toLocaleString('en-PH'), w.full_name, w.dob, i.age, w.phone, w.contact_method, w.email, w.instagram,
+      w.concerns, i.skipped.map(a => a.text).join(' | '), w.signature, w.reviewed_at ? new Date(w.reviewed_at).toLocaleString('en-PH') : '', w.id,
+    ].map(cell).join(','); });
+    const blob = new Blob(['﻿' + [head.join(','), ...lines].join('\r\n')], { type:'text/csv;charset=utf-8' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `fuzzy-needle-waivers-${new Date().toISOString().slice(0,10)}.csv`;
+    a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    toast(`Exported ${list.length} waiver${list.length > 1 ? 's' : ''}`);
+  });
+})();
+</script>
+</body>
+</html>
